@@ -1,0 +1,98 @@
+FILENAME REFFILE '/home/lniederlander0/train2.csv';
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=CSV
+	OUT=WORK.HOUSING;
+	GETNAMES=YES;
+RUN;  
+
+ /*Scatter on Specific neighborhood - Sales Price and Ttl Sq ft*/
+proc sgscatter data = HOUSING;
+matrix SalePrice GrLivArea/ group = Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+proc means;
+run;
+
+ /*Histogram on neighborhood - by Sales Price */
+proc univariate DATA=HOUSING;
+class Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+var SalePrice;
+Histogram / Normal (color = Green W=5) NROWS = 6;
+RUN;
+
+/*Histogram on neighborhood - by Sqfoot*/
+proc univariate DATA=HOUSING;
+class Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+var GrLivArea;
+Histogram / Normal (color = Green W=5) NROWS = 6;
+RUN;
+
+
+
+*/log transformation;
+
+data HOUSING;
+set Housing;
+logSalePrice=log(SalePrice);
+logGrLivArea=log(GrLivArea);
+run;
+
+ /*LOG Scatter on Specific neighborhood - Sales Price and Ttl Sq ft*/
+proc sgscatter data = HOUSING;
+matrix logSalePrice LogGrLivArea/ group = Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+proc means;
+run;
+
+ /*LOG Histogram on neighborhood - by Sales Price */
+proc univariate DATA=HOUSING;
+class Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+var LogSalePrice;
+Histogram / Normal (color = Green W=5) NROWS = 6;
+RUN;
+
+/*LOG Histogram on neighborhood - by Sqfoot*/
+proc univariate DATA=HOUSING;
+class Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+var LogGrLivArea;
+Histogram / Normal (color = Green W=5) NROWS = 6;
+RUN;
+
+*/ Test for beta 4 and beta 5 significance;
+proc glm data = HOUSING;
+class Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+model logGrLivArea = logSalePrice |  Neighborhood / solution;
+run;
+
+
+proc glm data = HOUSING;
+class Neighborhood;
+where Neighborhood = "NAmes" OR 
+Neighborhood = "Edwards" OR 
+Neighborhood = "BrkSide";
+model logGrLivArea = logSalePrice  Neighborhood / solution;
+run;
+
+
+*/Review residual plots;
+proc reg data = housing;
+model logSalePrice = logGrLivArea / clm cli;
+run;
