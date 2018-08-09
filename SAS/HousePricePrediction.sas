@@ -1,39 +1,56 @@
-
+*
+* Import the data from the training data.
+*
+;
 PROC IMPORT OUT=WORK.HousePrices 
-	DATAFILE= "C:\SMU\Courses\StatisticalFoundationsForDataScience\MSDS-6371-Kaggle\data\train-msds6371.csv" 
+	DATAFILE= "C:\SMU\Courses\StatisticalFoundationsForDataScience\MSDS-6371-Kaggle\data\train.csv" 
 	DBMS=CSV REPLACE;
 	GETNAMES=YES;
 	Guessingrows=3000;
 RUN;
 
-proc print data=HousePrices;
-run;
-
+* Question 1
+*
+* Limit the observations to the 3 neighborhoods in focus
+*
+;
 data HousePrices1;
 	set HousePrices;
+	where Neighborhood = "NAmes" OR 
+	Neighborhood = "Edwards" OR 
+	Neighborhood = "BrkSide";
 
 	logSalePrice = log(SalePrice);
 	logGrLivArea = log(GrLivArea);
 run;
 
 *
-* Question 1
-*;
+* Get the parameter estimates and confidence intervals
+*
+;
+proc glm data=HousePrices1 plots=all;
+	model logGrLivArea = logSalePrice / solution clparm;
+run;
+
+*
+* Get MSE, R-Square, Adj R-Square
+*
+;
 proc reg data=HousePrices1;
 	id logSalePrice;
 	model logGrLivArea = logSalePrice / clm cli;
 run;
 
+*
+* Get Cross Validation Details
+*
+;
 proc glmselect data=HousePrices1
 	seed=1 plots(stepAxis = number) = (criterionPanel ASEPlot Criterionpanel);
 	model logGrLivArea = logSalePrice /
 	selection=backwards(choose= CV stop= CV) cvmethod = Split(5) CVdetails;
 run;
 
-proc glm data=HousePrices1 plots=all;
-	model logGrLivArea = logSalePrice / solution clparm;
-run;
-*
 * Question 2
 *
 ;
