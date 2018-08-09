@@ -11,14 +11,53 @@ run;
 
 data HousePrices1;
 	set HousePrices;
-	
+
 	logSalePrice = log(SalePrice);
 	logGrLivArea = log(GrLivArea);
 run;
 
+*
+* Question 1
+*;
+proc reg data=HousePrices1;
+	id logSalePrice;
+	model logGrLivArea = logSalePrice / clm cli;
+run;
+
+proc glmselect data=HousePrices1
+	seed=1 plots(stepAxis = number) = (criterionPanel ASEPlot Criterionpanel);
+	model logGrLivArea = logSalePrice /
+	selection=backwards(choose= CV stop= CV) cvmethod = Split(5) CVdetails;
+run;
+
+proc glm data=HousePrices1 plots=all;
+	model logGrLivArea = logSalePrice / solution clparm;
+run;
+*
+* Question 2
+*
+;
+
+
+
+* 
+* Trial Code
+*
+;
+proc reg data=HousePrices1 plots=all;
+	model logGrLivArea = logSalePrice;
+run;
+proc glm data=HousePrices1 plots=all;
+	model logGrLivArea = logSalePrice / solution clparm;
+run;
+
+proc reg data=HousePrices1 plots=all;
+	model logGrLivArea = logSalePrice / vif;
+run;
+
 proc reg data=HousePrices;
 	id SalePrice;
-	model GrLivArea = SalePrice / R clm cli;
+	model GrLivArea = SalePrice / clm cli;
 run;
 
 proc reg data=HousePrices1;
@@ -60,3 +99,4 @@ run;
 
 proc print data=HousePrices1;
 run;
+
